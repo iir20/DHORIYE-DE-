@@ -1,8 +1,9 @@
 {
   "name": "dhoriyede",
-  "main": "worker.js",
-  "assets": {
-    "directory": "./dist",
-    "not_found_handling": "single-page-application"
-  }
+  "main": "dist/client/index.js", 
+  "compatibility_date": "2026-03-16",
+  "type": "javascript",
+  "workers_dev": true,
+  "routes": [],
+  "kv_namespaces": []
 }
