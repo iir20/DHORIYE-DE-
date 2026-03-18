@@ -9,9 +9,17 @@ export default defineConfig(({mode}) => {
   // If SUPABASE_URL is a postgres string, we try to extract the API URL.
   let supabaseUrl = env.VITE_SUPABASE_URL || env.SUPABASE_URL;
   if (supabaseUrl?.startsWith('postgresql')) {
-    // Attempt to derive from APP_URL or fallback to a known pattern if possible
-    // In this specific project, the user provided a Supabase URL in APP_URL placeholder
-    supabaseUrl = env.APP_URL; 
+    const match = supabaseUrl.match(/@db\.([^.]+)\.supabase\.co/);
+    if (match && match[1]) {
+      supabaseUrl = `https://${match[1]}.supabase.co`;
+    } else if (env.APP_URL?.includes('supabase.co')) {
+      supabaseUrl = env.APP_URL;
+    }
+  }
+
+  // Ensure we have a valid URL or fallback to a placeholder that won't crash but will show errors
+  if (!supabaseUrl) {
+    console.warn('Warning: SUPABASE_URL is missing in environment.');
   }
 
   return {

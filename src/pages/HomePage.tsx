@@ -9,6 +9,7 @@ import { ShieldAlert, MapPin, ShieldCheck, Users, Trophy } from 'lucide-react';
 const ReportMap = React.lazy(() => import('@/components/map/ReportMap'));
 
 export default function HomePage() {
+  console.log('[HomePage] Rendering');
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}

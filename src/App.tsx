@@ -9,11 +9,21 @@ function ErrorBoundary({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const handleError = (e: ErrorEvent) => {
+      console.error('ErrorBoundary caught error:', e.error);
       setHasError(true);
       setError(e.error);
     };
+    const handleRejection = (e: PromiseRejectionEvent) => {
+      console.error('ErrorBoundary caught unhandled rejection:', e.reason);
+      setHasError(true);
+      setError(e.reason instanceof Error ? e.reason : new Error(String(e.reason)));
+    };
     window.addEventListener('error', handleError);
-    return () => window.removeEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleRejection);
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleRejection);
+    };
   }, []);
 
   if (hasError) {
@@ -42,6 +52,7 @@ const LoadingFallback = () => (
 );
 
 export default function App() {
+  console.log('App rendering');
   return (
     <ErrorBoundary>
       <Router>
