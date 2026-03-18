@@ -1,4 +1,5 @@
 import React, { useState, Suspense } from 'react';
+import { supabase } from '@/lib/supabase';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,42 +21,59 @@ export default function ReportForm() {
   const [location, setLocation] = useState<Location | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!location) {
-      alert('Please select a location on the map.');
-      return;
-    }
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('description', description);
-    formData.append('corruptionType', corruptionType);
-    formData.append('lat', String(location.lat));
-    formData.append('lng', String(location.lng));
-    if (photo) {
-      formData.append('photo', photo);
-    }
-
-    try {
-      const response = await fetch('/api/report', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to submit report');
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!location) {
+        alert('Please select a location on the map.');
+        return;
       }
 
-      const result = await response.json();
-      console.log('Report submitted:', result);
-      alert('রিপোর্ট সফলভাবে জমা দেওয়া হয়েছে।'); // Report submitted successfully.
-      // Optionally, redirect or clear form
-      window.location.href = '/';
-    } catch (error) {
-      console.error(error);
-      alert('রিপোর্ট জমা দিতে একটি ত্রুটি হয়েছে।'); // An error occurred while submitting the report.
-    }
-  };
+      try {
+        let imageUrl = '';
+        if (photo) {
+          const fileExt = photo.name.split('.').pop();
+          const fileName = `${Math.random()}.${fileExt}`;
+          const filePath = `${fileName}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('report_photos')
+            .upload(filePath, photo);
+
+          if (uploadError) {
+            throw uploadError;
+          }
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('report_photos')
+            .getPublicUrl(filePath);
+          
+          imageUrl = publicUrl;
+        }
+
+        const { error: insertError } = await supabase
+          .from('reports')
+          .insert([
+            {
+              title,
+              description,
+              corruption_type: corruptionType,
+              latitude: location.lat,
+              longitude: location.lng,
+              image_url: imageUrl,
+            },
+          ]);
+
+        if (insertError) {
+          throw insertError;
+        }
+
+        alert('রিপোর্ট সফলভাবে জমা দেওয়া হয়েছে।'); // Report submitted successfully.
+        window.location.href = '/';
+      } catch (error: any) {
+        console.error('Error submitting report:', error);
+        alert(`রিপোর্ট জমা দিতে একটি ত্রুটি হয়েছে: ${error.message || 'Unknown error'}`);
+      }
+    };
 
   return (
     <form onSubmit={handleSubmit}>

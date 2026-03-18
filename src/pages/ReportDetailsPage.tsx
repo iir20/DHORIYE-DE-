@@ -50,24 +50,30 @@ export default function ReportDetailsPage() {
 
   const handleVote = async (voteType: boolean) => {
     try {
-      const response = await fetch('/api/vote', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ reportId: id, voteType }),
+      // Basic client-side check to prevent double voting
+      const votedReports = JSON.parse(localStorage.getItem('voted_reports') || '{}');
+      if (votedReports[id!]) {
+        alert('আপনি ইতিমধ্যে এই রিপোর্টে ভোট দিয়েছেন।');
+        return;
+      }
+
+      const { error } = await supabase.rpc('increment_vote_count', { 
+        report_id: id, 
+        vote_type: voteType 
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to vote');
+      if (error) {
+        throw error;
       }
+
+      // Mark as voted locally
+      votedReports[id!] = true;
+      localStorage.setItem('voted_reports', JSON.stringify(votedReports));
 
       alert('আপনার ভোট গ্রহণ করা হয়েছে।');
     } catch (error: any) {
       console.error('Error voting:', error);
-      alert(`ভোট দিতে একটি ত্রুটি হয়েছে: ${error.message}`);
+      alert(`ভোট দিতে একটি ত্রুটি হয়েছে: ${error.message || 'Unknown error'}`);
     }
   };
 

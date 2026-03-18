@@ -1,0 +1,11 @@
+name = "dhoriyede"
+compatibility_date = "2026-03-17"
+
+[assets]
+directory = "./dist/client"
+not_found_handling = "single-page-application"
+
+# Optional: Add environment variables if needed
+[vars]
+# SUPABASE_URL = ""
+# SUPABASE_ANON_KEY = ""
