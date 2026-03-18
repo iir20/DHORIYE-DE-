@@ -6,10 +6,13 @@ export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   
   // Map Supabase variables correctly. 
-  // If SUPABASE_URL is a postgres string, we use APP_URL as the API URL.
-  const supabaseUrl = env.SUPABASE_URL?.startsWith('postgresql') 
-    ? env.APP_URL 
-    : env.SUPABASE_URL;
+  // If SUPABASE_URL is a postgres string, we try to extract the API URL.
+  let supabaseUrl = env.VITE_SUPABASE_URL || env.SUPABASE_URL;
+  if (supabaseUrl?.startsWith('postgresql')) {
+    // Attempt to derive from APP_URL or fallback to a known pattern if possible
+    // In this specific project, the user provided a Supabase URL in APP_URL placeholder
+    supabaseUrl = env.APP_URL; 
+  }
 
   return {
     plugins: [react()],
